@@ -1,7 +1,69 @@
 // THIS CONTROLS THE BUDGET
 
 var budgetController = (function () {
+    var Expense = function(id, desc, val) {
+        this.id = id;
+        this.desc = desc;
+        this.val = val
+    };
 
+    var Income = function(id, desc, val) {
+        this.id = id;
+        this.desc = desc;
+        this.val = val
+    };
+
+    var data = {
+        items: {
+                exp: [],
+                inc: []
+            },
+        totals: {
+            exp: 0,
+            inc: 0
+        }
+     }
+    
+     return {
+         addItem: function (type, desc, val) {
+            let newItem, id, dataType;
+
+            dataType = data.items[type]
+            
+            //create new id
+            if (dataType.length > 0) {
+                id = dataType[dataType.length - 1].id + 1
+            } 
+            // might have to remove this else if bc of id selectors in html (maybe tho)
+            else if (dataType.length === 0) {
+                id = 1;
+            }
+             else {
+                id = 0;
+            }
+            
+
+
+            // create new item based on inc or exp
+            if (type === 'exp') {
+                newItem = new Expense (id, desc, val); 
+            }
+             else if (type === 'inc') {
+                newItem = new Income (id, desc, val); 
+            }
+            // push into items data structure
+            dataType.push(newItem);
+
+            // return to global scope
+            return newItem;
+
+         },
+
+         testing: function () {
+             console.log(data);
+         }
+
+     };
 
 
 })();
@@ -60,9 +122,19 @@ var appController = (function (budgetCtrl, UICtrl) {
     }
 
     var ctrlAddItem = function () {
-        let input = UICtrl.getInput();
-        // get all the data
-        console.log(input);
+        let input, newItem;
+        // 1. get input field data (what they're typing into budget)
+        input = UICtrl.getInput();
+        
+
+        // 2. add items to budget controller
+        newItem = budgetCtrl.addItem(input.type, input.desc, input.val);
+
+        // 3. add items to the User Interface (UI)
+
+        // 4. Calculate the budget
+
+        // 5. Display the budget on the UI.
   
     }
 
