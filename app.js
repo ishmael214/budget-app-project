@@ -78,7 +78,9 @@ var UIController = (function (){
         type: '.add__type',
         desc: '.add__description',
         val: '.add__value',
-        addBtn: '.add__btn'
+        addBtn: '.add__btn',
+        incomeContainer: '.income__list',
+        expenseContainer: '.expenses__list',
     }
 
 
@@ -90,6 +92,61 @@ var UIController = (function (){
                 val: document.querySelector(domStrings.val).value
             }
             
+        },
+
+        addListItem: function(obj, type) {
+            let html, newHtml, element;
+            // create html string w palceholder
+
+            // inc
+            if (type === 'inc') {
+                element = domStrings.incomeContainer
+                html = `<div class="item clearfix" id="income-%id%"> 
+                            <div class="item__description">%desc%</div> 
+                            <div class="right clearfix">
+                                <div class="item__value">+ %val%</div>
+                                <div class="item__delete">
+                                    <button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button>
+                                </div>
+                            </div>
+                        </div>`;
+            }
+            
+
+            // exp
+            if (type === 'exp') {
+                element = domStrings.expenseContainer
+                html = `<div class="item clearfix" id="expense-%id%">
+                            <div class="item__description">%desc%</div>
+                            <div class="right clearfix">
+                                <div class="item__value">- %val%</div>
+                                <div class="item__percentage">21%</div>
+                                <div class="item__delete">
+                                    <button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button>
+                                </div>
+                            </div>
+                        </div>`;
+            }
+            
+
+            // replace placehodler text with actual data
+            newHtml = html.replace('%id%', obj.id);
+            newHtml = newHtml.replace('%desc%', obj.desc);
+            newHtml = newHtml.replace('%val%', obj.val);
+            // insert html into DOM
+            document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
+        },
+        clearFields: function () {
+            let fields, fieldsArr;
+
+            fields = document.querySelectorAll(domStrings.desc + ',' + domStrings.val)
+            fieldsArr = Array.prototype.slice.call(fields);
+
+            fieldsArr.forEach(function (current, index, array){
+                current.value = "";
+            });
+
+            fieldsArr[0].focus();
         },
 
         getDomStrings: function (){
@@ -132,6 +189,11 @@ var appController = (function (budgetCtrl, UICtrl) {
 
         // 3. add items to the User Interface (UI)
 
+        UICtrl.addListItem(newItem, input.type);
+
+        // clear fields
+
+        UICtrl.clearFields();
         // 4. Calculate the budget
 
         // 5. Display the budget on the UI.
