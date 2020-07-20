@@ -170,10 +170,47 @@ var UIController = (function (){
         expensesLabel: '.budget__expenses--value',
         percentageLabel: '.budget__expenses--percentage',
         container: '.container',
-        percs: '.item__percentage'
-    }
+        percs: '.item__percentage',
+        dateLabel: '.budget__title--month'
+    };
+
+    var formatNumber = function (num, type) {
+        let numSplit, int, dec;
+        /*
+        + or - before #
+        2 decimal places
+        comma separating thousands
+        */
+
+        num = Math.abs(num);
+        num = num.toFixed(2);
+
+        numSplit = num.split('.')
+
+        int = numSplit[0];
+        dec = numSplit[1];
+
+        if (int.length >= 7) {
+            int = int.substr(0, int.length - 6) + ',' + int.substr(int.length - 6, 3) + ',' + int.substr(int.length - 3, 3);
+            // 7,000,000
+        }
+        else if (int.length > 3 && int.length < 7) {
+            int = int.substr(0, int.length - 3) + ',' + int.substr(int.length - 3, 3);
+        }
+
+        // 500,000
+
+        return (type === 'exp' ?  '-' : '+') + ' ' + int + '.' + dec;
 
 
+        };
+
+        var nodeListForEach = function(list, callback) {
+            for (let i = 0; i < list.length; i++) {
+                callback(list[i], i);
+            } 
+        }; 
+        
     return {
         getInput: function () {
             return {
@@ -194,7 +231,7 @@ var UIController = (function (){
                 html = `<div class="item clearfix" id="inc-%id%"> 
                             <div class="item__description">%desc%</div> 
                             <div class="right clearfix">
-                                <div class="item__value">+ %val%</div>
+                                <div class="item__value"> %val%</div>
                                 <div class="item__delete">
                                     <button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button>
                                 </div>
@@ -208,7 +245,7 @@ var UIController = (function (){
                 html = `<div class="item clearfix" id="exp-%id%">
                             <div class="item__description">%desc%</div>
                             <div class="right clearfix">
-                                <div class="item__value">- %val%</div>
+                                <div class="item__value"> %val%</div>
                                 <div class="item__percentage">21%</div>
                                 <div class="item__delete">
                                     <button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button>
@@ -221,7 +258,7 @@ var UIController = (function (){
             // replace placehodler text with actual data
             newHtml = html.replace('%id%', obj.id);
             newHtml = newHtml.replace('%desc%', obj.desc);
-            newHtml = newHtml.replace('%val%', obj.val);
+            newHtml = newHtml.replace('%val%', formatNumber(obj.val, type));
             // insert html into DOM
             document.querySelector(element).insertAdjacentHTML('beforeend', newHtml);
         },
@@ -248,9 +285,12 @@ var UIController = (function (){
         },
 
         displayBudget: function(obj) {
-            document.querySelector(domStrings.budgetLabel).textContent = obj.budget;
-            document.querySelector(domStrings.incomeLabel).textContent = obj.totalInc;
-            document.querySelector(domStrings.expensesLabel).textContent = obj.totalExp;
+            let type;
+            obj.budget > 0 ? type = 'inc' : type = 'exp';
+
+            document.querySelector(domStrings.budgetLabel).textContent = formatNumber(obj.budget, type);
+            document.querySelector(domStrings.incomeLabel).textContent = formatNumber(obj.totalInc, 'inc');
+            document.querySelector(domStrings.expensesLabel).textContent = formatNumber(obj.totalExp, 'exp');
             
 
             if (obj.percentage > 0) {
@@ -264,13 +304,6 @@ var UIController = (function (){
 
             var fields = document.querySelectorAll(domStrings.percs);
 
-
-            var nodeListForEach = function(list, callback) {
-                for (let i = 0; i < list.length; i++) {
-                    callback(list[i], i);
-                } 
-            }; 
-
                nodeListForEach(fields, function(current, index){
                     if (percentages[index] > 0 ) {
                         current.textContent = percentages[index] + '%';
@@ -278,6 +311,32 @@ var UIController = (function (){
                         current.textContent = '---'  
                     }
                 }); 
+        },
+
+        displayMonth: function (){
+            let now, year, month, allMonths;
+             now = new Date();
+
+             allMonths = ['blank', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', ]
+             month = now.getMonth()+1;
+             year = now.getFullYear();
+             document.querySelector(domStrings.dateLabel).textContent = allMonths[month] + ' / ' + year;
+
+        },
+
+        changedType: function () {
+            let fields;
+
+            fields = document.querySelectorAll(
+                domStrings.type + ',' + 
+                domStrings.desc + ',' +
+                domStrings.val);
+            
+                nodeListForEach(fields, function(cur){
+                    cur.classList.toggle('red-focus');
+                });
+
+                document.querySelector(domStrings.addBtn).classList.toggle('red');
         },
 
         getDomStrings: function (){
@@ -309,6 +368,8 @@ var appController = (function (budgetCtrl, UICtrl) {
         });
 
         document.querySelector(domStrings.container).addEventListener('click', cntrlDeleteItem);
+
+        document.querySelector(domStrings.type).addEventListener('change', UICtrl.changedType);
     };
 
     var updateBudget = function () {
@@ -387,6 +448,7 @@ var appController = (function (budgetCtrl, UICtrl) {
     return {
         init: function () {
             setupEventListenerNother();
+            UICtrl.displayMonth();
             UICtrl.displayBudget({
                 budget: 0,
                 totalInc: 0,
